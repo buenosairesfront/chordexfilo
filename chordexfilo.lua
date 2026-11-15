@@ -1207,15 +1207,16 @@ local FAM_ICON = {
 }
 local ICON_LV = {["#"] = 15, ["+"] = 9, ["."] = 4}
 
-local function text_box(txt, a)
+local function text_box(txt, a, y)
+  local cy = y or CY
   screen.font_face(1)
   screen.font_size(8)
   local w = screen.text_extents(txt)
   screen.level(0)
-  screen.rect(CX - w / 2 - 3, CY - 6, w + 6, 11)
+  screen.rect(CX - w / 2 - 3, cy - 6, w + 6, 11)
   screen.fill()
   screen.level(math.floor(15 * a))
-  screen.move(CX - w / 2, CY + 2)
+  screen.move(CX - w / 2, cy + 2)
   screen.text(txt)
 end
 
@@ -1263,7 +1264,7 @@ local function draw_overlays()
     text_box(txt, k3_held and 1 or math.min(1, chord_flash / PULSE))
   elseif fader_flash > 0 then
     -- nombre del fader elegido con E2 o ajustado con E3
-    text_box(P[focus_index].name, 1)
+    text_box(P[focus_index].name, 1, 58)   -- abajo, al borde de la pantalla
   end
 end
 
