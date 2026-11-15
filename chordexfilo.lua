@@ -550,6 +550,8 @@ function enc(n, d)
       chord_flash = PULSE * 2
     else
       nudge(P[focus_index], d)
+      fader_flash = PULSE * 1.5
+      model_flash = 0; chord_flash = 0
       bump(P[focus_index].id)
     end
   end
@@ -1260,8 +1262,8 @@ local function draw_overlays()
     if pv("chord_on") == 1 then txt = rn or "1" end
     text_box(txt, k3_held and 1 or math.min(1, chord_flash / PULSE))
   elseif fader_flash > 0 then
-    -- nombre del fader elegido con E2
-    text_box(P[focus_index].name, math.min(1, fader_flash / (PULSE * 0.5)))
+    -- nombre del fader elegido con E2 o ajustado con E3
+    text_box(P[focus_index].name, 1)
   end
 end
 
