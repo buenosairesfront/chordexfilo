@@ -61,7 +61,7 @@ local chord_intervals = {
 }
 local note_names = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}
 -- falla: tipos y velocidades (en negras por ciclo)
-local FALLA_NAMES = {"CAIDA", "TARTAMUDEO", "MORDIDA", "POZO"}
+local FALLA_NAMES = {"DROP", "STUTTER", "BITE", "PIT"}
 local FALLA_DIV = {2, 1, 0.5, 0.25, 0.125}
 local FALLA_DIV_NAMES = {"1/2", "1/4", "1/8", "1/16", "1/32"}
 local FALLA_DEF_DIV = {2, 4, 4, 2}   -- velocidad que trae cada tipo
@@ -138,16 +138,16 @@ end
 
 -- faders (E2 elige, E3 ajusta); el cutoff va en E1
 local P = {
-  {id = "atk", name = "ATAQUE",   min = 0.001, max = 6,  step = 0.02},
+  {id = "atk", name = "ATTACK",   min = 0.001, max = 6,  step = 0.02},
   {id = "rel", name = "RELEASE",   min = 0.02,  max = 10, step = 0.05},
-  {id = "res", name = "RESONANCIA",   min = 0,     max = 1,  step = 0.02},
-  {id = "size", name = "GRANO",  min = 0,     max = 1,  step = 0.02},
-  {id = "dens", name = "DENSIDAD",  min = 0,     max = 1,  step = 0.02},
-  {id = "mem", name = "MEMORIA",   min = 0,     max = 1,  step = 0.02},
-  {id = "caos", name = "CAOS",  min = 0,     max = 1,  step = 0.02},
-  {id = "roto", name = "ROTO",  min = 0,     max = 1,  step = 0.02},
-  {id = "polvo", name = "POLVO", min = 0,     max = 1,  step = 0.02},
-  {id = "eco", name = "ECO",   min = 0,     max = 1,  step = 0.02},
+  {id = "res", name = "RESONANCE",   min = 0,     max = 1,  step = 0.02},
+  {id = "size", name = "GRAIN",  min = 0,     max = 1,  step = 0.02},
+  {id = "dens", name = "DENSITY",  min = 0,     max = 1,  step = 0.02},
+  {id = "mem", name = "MEMORY",   min = 0,     max = 1,  step = 0.02},
+  {id = "caos", name = "CHAOS",  min = 0,     max = 1,  step = 0.02},
+  {id = "roto", name = "BROKEN",  min = 0,     max = 1,  step = 0.02},
+  {id = "polvo", name = "DUST", min = 0,     max = 1,  step = 0.02},
+  {id = "eco", name = "ECHO",   min = 0,     max = 1,  step = 0.02},
 }
 local focus_index = 1
 
@@ -377,8 +377,8 @@ end
 
 local function add_params()
   params:add_separator("filo", "CHORDEX FILO")
-  params:add_number("midi_channel", "canal MIDI (0=todos)", 0, 16, 1)
-  params:add_option("fam", "banco", fam_names, 1)
+  params:add_number("midi_channel", "MIDI channel (0=all)", 0, 16, 1)
+  params:add_option("fam", "bank", fam_names, 1)
   params:set_action("fam", function()
     if not loading then
       if pv("preset") ~= 1 then params:set("preset", 1) else load_preset() end
@@ -388,57 +388,57 @@ local function add_params()
   params:set_action("preset", function()
     if not loading then load_preset() end
   end)
-  params:add_option("chord", "acorde", chord_types, 1)
+  params:add_option("chord", "chord", chord_types, 1)
   params:set_action("chord", function() send_chord() end)
-  params:add_option("chord_on", "modo acorde (granos)", {"no", "sí"}, 2)
+  params:add_option("chord_on", "chord mode (grains)", {"no", "yes"}, 2)
   params:set_action("chord_on", function() send_chord() end)
-  params:add_separator("filo_falla", "FALLA (K2)")
-  params:add_option("falla_mode", "tipo de falla", FALLA_NAMES, 1)
+  params:add_separator("filo_falla", "GLITCH (K2)")
+  params:add_option("falla_mode", "glitch type", FALLA_NAMES, 1)
   params:set_action("falla_mode", function(v)
     if not loading then params:set("falla_div", FALLA_DEF_DIV[v]) end
     send_falla()
   end)
-  params:add_control("falla_depth", "profundidad", controlspec.new(0, 1, "lin", 0, 0.85, ""))
+  params:add_control("falla_depth", "depth", controlspec.new(0, 1, "lin", 0, 0.85, ""))
   params:set_action("falla_depth", function() send_falla() end)
-  params:add_option("falla_div", "velocidad", FALLA_DIV_NAMES, 2)
+  params:add_option("falla_div", "rate", FALLA_DIV_NAMES, 2)
   params:set_action("falla_div", function() send_falla() end)
 
-  params:add_separator("filo_src", "FUENTE")
-  ctl("forma", "forma (sierra-pulso)", 0, 1, DEF.fo, "", function(v) engine.forma(v) end)
+  params:add_separator("filo_src", "SOURCE")
+  ctl("forma", "shape (saw-pulse)", 0, 1, DEF.fo, "", function(v) engine.forma(v) end)
   ctl("sub", "sub", 0, 1, DEF.sb, "", function(v) engine.sub(v) end)
   ctl("glide", "glide", 0, 1, DEF.gl, "s", function(v) engine.glide(v) end)
-  params:add_number("oct", "octava", -2, 2, 0)
+  params:add_number("oct", "octave", -2, 2, 0)
   params:set_action("oct", function()
     if current_note and not loading then play(current_note, false) end
   end)
-  ctl("wow", "wow (cinta)", 0, 1, DEF.wo, "", function(v) engine.wow(v) end)
-  ctl("drive", "saturación", 0, 1, DEF.dr, "", function(v) engine.drive(v) end)
+  ctl("wow", "wow (tape)", 0, 1, DEF.wo, "", function(v) engine.wow(v) end)
+  ctl("drive", "saturation", 0, 1, DEF.dr, "", function(v) engine.drive(v) end)
 
-  params:add_separator("filo_grn", "NUBE")
-  ctl("nube", "nube (seco-granos)", 0, 1, DEF.nu, "", function(v) engine.nube(v) end)
-  ctl("size", "tamaño del grano", 0, 1, DEF.sz, "", function(v) engine.size(v) end)
-  ctl("dens", "densidad", 0, 1, DEF.dn, "", function(v) engine.dens(v) end)
-  ctl("mem", "memoria", 0, 1, DEF.me, "", function(v) engine.mem(v) end)
-  ctl("caos", "caos", 0, 1, DEF.ca, "", function(v) engine.caos(v) end)
-  ctl("roto", "roto", 0, 1, DEF.ro, "", function(v) engine.roto(v) end)
-  ctl("polvo", "polvo", 0, 1, DEF.po, "", function(v) engine.polvo(v) end)
+  params:add_separator("filo_grn", "CLOUD")
+  ctl("nube", "cloud (dry-grains)", 0, 1, DEF.nu, "", function(v) engine.nube(v) end)
+  ctl("size", "grain size", 0, 1, DEF.sz, "", function(v) engine.size(v) end)
+  ctl("dens", "density", 0, 1, DEF.dn, "", function(v) engine.dens(v) end)
+  ctl("mem", "memory", 0, 1, DEF.me, "", function(v) engine.mem(v) end)
+  ctl("caos", "chaos", 0, 1, DEF.ca, "", function(v) engine.caos(v) end)
+  ctl("roto", "broken", 0, 1, DEF.ro, "", function(v) engine.roto(v) end)
+  ctl("polvo", "dust", 0, 1, DEF.po, "", function(v) engine.polvo(v) end)
 
-  params:add_separator("filo_env", "ENVOLVENTE / FILTRO")
-  ctl("atk", "ataque", 0.001, 6, DEF.a, "s", function(v) engine.atk(v) end)
+  params:add_separator("filo_env", "ENVELOPE / FILTER")
+  ctl("atk", "attack", 0.001, 6, DEF.a, "s", function(v) engine.atk(v) end)
   ctl("dec", "decay", 0.05, 6, DEF.d, "s", function(v) engine.dec(v) end)
   ctl("sus", "sustain", 0, 1, DEF.s, "", function(v) engine.sus(v) end)
   ctl("rel", "release", 0.02, 10, DEF.r, "s", function(v) engine.rel(v) end)
   ctl("cut", "cutoff", 0, 1, DEF.c, "", function(v) engine.cut(v) end)
-  ctl("res", "resonancia", 0, 1, DEF.q, "", function(v) engine.res(v) end)
-  ctl("fenv", "env filtro", 0, 1, DEF.fe, "", function(v) engine.fenv(v) end)
+  ctl("res", "resonance", 0, 1, DEF.q, "", function(v) engine.res(v) end)
+  ctl("fenv", "filter env", 0, 1, DEF.fe, "", function(v) engine.fenv(v) end)
 
   params:add_separator("filo_fx", "FX")
-  ctl("eco", "eco de cinta", 0, 1, DEF.e, "", function(v) engine.eco(v) end)
-  ctl("ecofb", "eco repeticiones", 0, 0.9, DEF.ef, "", function(v) engine.ecofb(v) end)
-  params:add_option("ecot_div", "eco tiempo", ECO_NAMES, DEF.et)
+  ctl("eco", "tape echo", 0, 1, DEF.e, "", function(v) engine.eco(v) end)
+  ctl("ecofb", "echo feedback", 0, 0.9, DEF.ef, "", function(v) engine.ecofb(v) end)
+  params:add_option("ecot_div", "echo time", ECO_NAMES, DEF.et)
   params:set_action("ecot_div", function() eco_sent = 0; update_eco_time() end)
   ctl("space", "hall", 0, 0.8, DEF.h, "", function(v) engine.space(v) end)
-  ctl("gain", "volumen", 0, 1.5, 1.0, "", function(v) engine.gain(v) end)
+  ctl("gain", "volume", 0, 1.5, 1.0, "", function(v) engine.gain(v) end)
 end
 
 -- ============================================================
